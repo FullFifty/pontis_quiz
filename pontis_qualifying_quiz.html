@@ -1,0 +1,626 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .quiz-wrap {
+    font-family: var(--font-sans);
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--color-border-tertiary);
+    border-radius: 2px;
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #C4623A;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .step-label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.75rem;
+  }
+
+  .question {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+  }
+
+  .question-sub {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+    width: 100%;
+  }
+
+  .option-btn:hover {
+    border-color: var(--color-border-secondary);
+    background: var(--color-background-secondary);
+  }
+
+  .option-btn.selected {
+    border-color: #C4623A;
+    background: var(--color-background-primary);
+  }
+
+  .option-btn.selected .opt-dot {
+    background: #C4623A;
+    border-color: #C4623A;
+  }
+
+  .opt-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border-secondary);
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .opt-dot-inner {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .option-btn.selected .opt-dot-inner { opacity: 1; }
+
+  .opt-label {
+    font-size: 15px;
+    color: var(--color-text-primary);
+    line-height: 1.4;
+  }
+
+  .opt-sub {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+  }
+
+  .btn-back {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0;
+    transition: color 0.15s;
+  }
+
+  .btn-back:hover { color: var(--color-text-primary); }
+
+  .btn-next {
+    padding: 12px 28px;
+    background: #C4623A;
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn-next:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .btn-next:not(:disabled):hover { opacity: 0.88; }
+  .btn-next:not(:disabled):active { transform: scale(0.98); }
+
+  .text-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    font-size: 15px;
+    font-family: var(--font-sans);
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+
+  .text-input:focus { border-color: #C4623A; }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+
+  .input-row .text-input { margin-bottom: 0; }
+
+  .result-wrap {
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  .result-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 28px;
+  }
+
+  .result-icon.qualified { background: #E1F5EE; }
+  .result-icon.warm { background: #FAEEDA; }
+  .result-icon.nurture { background: var(--color-background-secondary); }
+
+  .result-title {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .result-sub {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    line-height: 1.65;
+    max-width: 460px;
+    margin: 0 auto 2rem;
+  }
+
+  .result-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .pill {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 0.5px solid var(--color-border-tertiary);
+    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+  }
+
+  .result-cta {
+    display: inline-block;
+    padding: 14px 32px;
+    background: #C4623A;
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    text-decoration: none;
+  }
+
+  .result-cta:hover { opacity: 0.88; }
+
+  .result-cta.secondary {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 0.5px solid var(--color-border-secondary);
+    margin-top: 10px;
+    display: block;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .score-bar-wrap {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+  }
+
+  .score-bar-label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .score-bar {
+    height: 6px;
+    background: var(--color-border-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease 0.3s;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="quiz-wrap">
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress" style="width: 0%"></div>
+  </div>
+  <div id="quiz-content"></div>
+</div>
+
+<script>
+const steps = [
+  {
+    id: 'size',
+    label: 'Step 1 of 6',
+    question: 'How many active students does your academy have?',
+    sub: 'Active means training at least twice a week.',
+    type: 'radio',
+    options: [
+      { value: 'small', label: 'Under 30 students', sub: 'Just getting started', score: 1 },
+      { value: 'mid-low', label: '30–50 students', sub: 'Growing steadily', score: 2 },
+      { value: 'mid', label: '50–150 students', sub: 'Solid mid-size academy', score: 4 },
+      { value: 'large', label: '150+ students', sub: 'Established operation', score: 3 },
+    ]
+  },
+  {
+    id: 'gear',
+    label: 'Step 2 of 6',
+    question: 'How do your students currently get their gis?',
+    sub: 'Pick the option closest to your current situation.',
+    type: 'radio',
+    options: [
+      { value: 'nobody', label: 'We have no gear program', sub: 'Students buy whatever they want', score: 4 },
+      { value: 'recommend', label: 'We recommend a brand', sub: 'No revenue share for us', score: 3 },
+      { value: 'resell', label: 'We resell a third-party brand', sub: 'Some revenue, no brand control', score: 2 },
+      { value: 'private', label: 'We already have private label', sub: 'Looking to upgrade or switch', score: 2 },
+    ]
+  },
+  {
+    id: 'timeline',
+    label: 'Step 3 of 6',
+    question: 'When are you looking to place a first order?',
+    sub: 'This helps us prioritize our outreach.',
+    type: 'radio',
+    options: [
+      { value: 'asap', label: 'As soon as possible', sub: 'Within the next 30 days', score: 4 },
+      { value: '1-3', label: '1–3 months', sub: 'Planning ahead', score: 3 },
+      { value: '3-6', label: '3–6 months', sub: 'Still evaluating options', score: 2 },
+      { value: 'exploring', label: 'Just exploring for now', sub: 'No set timeline yet', score: 1 },
+    ]
+  },
+  {
+    id: 'priority',
+    label: 'Step 4 of 6',
+    question: 'What matters most to you in a gear partner?',
+    sub: 'Pick the one that matters most right now.',
+    type: 'radio',
+    options: [
+      { value: 'quality', label: 'Product quality and durability', sub: 'My members need gear that lasts', score: 4 },
+      { value: 'brand', label: 'Custom branding for my academy', sub: 'I want our name on the product', score: 4 },
+      { value: 'price', label: 'Lowest possible cost per unit', sub: 'Margins are my top concern', score: 1 },
+      { value: 'service', label: 'Reliable service and fast turnaround', sub: 'I need a vendor I can trust', score: 3 },
+    ]
+  },
+  {
+    id: 'budget',
+    label: 'Step 5 of 6',
+    question: 'What is your expected budget for a first order?',
+    sub: 'Pontis private label orders typically start around $3,000.',
+    type: 'radio',
+    options: [
+      { value: 'under3', label: 'Under $3,000', sub: 'Looking for a smaller starting point', score: 1 },
+      { value: '3-7', label: '$3,000–$7,000', sub: 'Solid starting budget', score: 3 },
+      { value: '7-15', label: '$7,000–$15,000', sub: 'Ready to make a real investment', score: 4 },
+      { value: 'over15', label: 'Over $15,000', sub: 'Large program or multiple locations', score: 4 },
+    ]
+  },
+  {
+    id: 'contact',
+    label: 'Step 6 of 6',
+    question: 'Almost done. Where should we send your results?',
+    sub: 'We will include a custom quote based on your answers.',
+    type: 'contact',
+  }
+];
+
+let current = 0;
+let answers = {};
+let scores = [];
+
+function getScore() {
+  return scores.reduce((a, b) => a + b, 0);
+}
+
+function getResult(score) {
+  const max = steps.filter(s => s.type === 'radio').length * 4;
+  const pct = score / max;
+  if (pct >= 0.7) return 'qualified';
+  if (pct >= 0.45) return 'warm';
+  return 'nurture';
+}
+
+function render() {
+  const container = document.getElementById('quiz-content');
+  const progress = document.getElementById('progress');
+
+  if (current < steps.length) {
+    progress.style.width = ((current / steps.length) * 100) + '%';
+  } else {
+    progress.style.width = '100%';
+  }
+
+  if (current >= steps.length) {
+    renderResult(container);
+    return;
+  }
+
+  const step = steps[current];
+  container.innerHTML = '';
+  container.className = 'fade-in';
+
+  if (step.type === 'radio') {
+    renderRadio(container, step);
+  } else if (step.type === 'contact') {
+    renderContact(container, step);
+  }
+}
+
+function renderRadio(container, step) {
+  const selected = answers[step.id];
+
+  container.innerHTML = `
+    <div class="step-label">${step.label}</div>
+    <div class="question">${step.question}</div>
+    ${step.sub ? `<div class="question-sub">${step.sub}</div>` : ''}
+    <div class="options" id="options"></div>
+    <div class="nav-row">
+      ${current > 0 ? '<button class="btn-back" id="btn-back">← Back</button>' : '<span></span>'}
+      <button class="btn-next" id="btn-next" ${!selected ? 'disabled' : ''}>Continue</button>
+    </div>
+  `;
+
+  const optionsEl = document.getElementById('options');
+  step.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn' + (selected === opt.value ? ' selected' : '');
+    btn.innerHTML = `
+      <div class="opt-dot"><div class="opt-dot-inner"></div></div>
+      <div>
+        <div class="opt-label">${opt.label}</div>
+        ${opt.sub ? `<div class="opt-sub">${opt.sub}</div>` : ''}
+      </div>
+    `;
+    btn.addEventListener('click', () => {
+      answers[step.id] = opt.value;
+      const existingScore = scores[current] || 0;
+      scores[current] = opt.score;
+      document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('btn-next').disabled = false;
+    });
+    optionsEl.appendChild(btn);
+  });
+
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.addEventListener('click', () => {
+    if (answers[step.id]) {
+      current++;
+      render();
+    }
+  });
+
+  const backBtn = document.getElementById('btn-back');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      current--;
+      render();
+    });
+  }
+}
+
+function renderContact(container, step) {
+  const saved = answers['contact'] || {};
+
+  container.innerHTML = `
+    <div class="step-label">${step.label}</div>
+    <div class="question">${step.question}</div>
+    ${step.sub ? `<div class="question-sub">${step.sub}</div>` : ''}
+    <div class="input-row">
+      <input class="text-input" id="inp-name" type="text" placeholder="Your name" value="${saved.name || ''}">
+      <input class="text-input" id="inp-academy" type="text" placeholder="Academy name" value="${saved.academy || ''}">
+    </div>
+    <input class="text-input" id="inp-email" type="email" placeholder="Email address" value="${saved.email || ''}" style="margin-bottom: 10px; display: block;">
+    <input class="text-input" id="inp-phone" type="tel" placeholder="Phone (optional)" value="${saved.phone || ''}" style="margin-bottom: 2rem; display: block;">
+    <div class="nav-row">
+      <button class="btn-back" id="btn-back">← Back</button>
+      <button class="btn-next" id="btn-submit">See my results</button>
+    </div>
+  `;
+
+  document.getElementById('btn-back').addEventListener('click', () => {
+    current--;
+    render();
+  });
+
+  const nameEl = document.getElementById('inp-name');
+  const emailEl = document.getElementById('inp-email');
+
+  function checkReady() {
+    const ready = nameEl.value.trim().length > 0 && emailEl.value.includes('@');
+    document.getElementById('btn-submit').disabled = !ready;
+  }
+
+  document.getElementById('btn-submit').disabled = !(saved.name && saved.email);
+  [nameEl, emailEl, document.getElementById('inp-academy'), document.getElementById('inp-phone')]
+    .forEach(el => el.addEventListener('input', checkReady));
+
+  document.getElementById('btn-submit').addEventListener('click', () => {
+    answers['contact'] = {
+      name: nameEl.value.trim(),
+      academy: document.getElementById('inp-academy').value.trim(),
+      email: emailEl.value.trim(),
+      phone: document.getElementById('inp-phone').value.trim(),
+    };
+    current++;
+    render();
+  });
+}
+
+function renderResult(container) {
+  const score = getScore();
+  const result = getResult(score);
+  const max = steps.filter(s => s.type === 'radio').length * 4;
+  const pct = Math.round((score / max) * 100);
+  const name = (answers['contact'] && answers['contact'].name) ? answers['contact'].name.split(' ')[0] : 'there';
+
+  const configs = {
+    qualified: {
+      icon: '✓',
+      iconClass: 'qualified',
+      title: `You're a strong fit, ${name}.`,
+      sub: "Based on your answers, Pontis is a great match for your academy right now. You have the size, timeline, and intent to make a private label program work. We will reach out within 24 hours with a custom quote.",
+      cta: "Book a call",
+      ctaAction: () => sendPrompt("I want to book a call with Pontis about starting a private label program"),
+      barColor: '#1D9E75',
+      barLabel: 'Fit score',
+    },
+    warm: {
+      icon: '→',
+      iconClass: 'warm',
+      title: `Good timing, ${name}.`,
+      sub: "Your academy is on the right track. There are a few things we would want to walk through together before committing to a program. Expect a personalized note from us within 48 hours.",
+      cta: "Send me more info",
+      ctaAction: () => sendPrompt("Send me more information about Pontis private label programs for my academy size"),
+      barColor: '#BA7517',
+      barLabel: 'Fit score',
+    },
+    nurture: {
+      icon: '◎',
+      iconClass: 'nurture',
+      title: `Not quite ready yet, ${name}.`,
+      sub: "You might not be in the right window for private label right now, and that is totally fine. We will add you to our newsletter with tips on building a gear program as your academy grows.",
+      cta: "Stay in the loop",
+      ctaAction: () => sendPrompt("Add me to the Pontis newsletter about building a gear program"),
+      barColor: '#888780',
+      barLabel: 'Fit score',
+    }
+  };
+
+  const cfg = configs[result];
+
+  const pills = [];
+  if (answers['size']) {
+    const sizeMap = { small: 'Under 30 students', 'mid-low': '30–50 students', mid: '50–150 students', large: '150+ students' };
+    pills.push(sizeMap[answers['size']]);
+  }
+  if (answers['priority']) {
+    const prioMap = { quality: 'Quality-first', brand: 'Brand-first', price: 'Cost-focused', service: 'Service-focused' };
+    pills.push(prioMap[answers['priority']]);
+  }
+  if (answers['timeline']) {
+    const tlMap = { asap: 'Ready now', '1-3': '1–3 months', '3-6': '3–6 months', exploring: 'Just exploring' };
+    pills.push(tlMap[answers['timeline']]);
+  }
+  if (answers['budget']) {
+    const budMap = { under3: 'Budget under $3K', '3-7': '$3K–$7K budget', '7-15': '$7K–$15K budget', over15: '$15K+ budget' };
+    pills.push(budMap[answers['budget']]);
+  }
+
+  container.innerHTML = `
+    <div class="result-wrap fade-in">
+      <div class="result-icon ${cfg.iconClass}" style="font-size: 24px; line-height: 1;">${cfg.icon}</div>
+      <div class="result-title">${cfg.title}</div>
+      <div class="result-sub">${cfg.sub}</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-label">
+          <span>${cfg.barLabel}</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="score-bar">
+          <div class="score-bar-fill" id="score-fill" style="width: 0%; background: ${cfg.barColor};"></div>
+        </div>
+      </div>
+      <div class="result-pills">
+        ${pills.map(p => `<span class="pill">${p}</span>`).join('')}
+      </div>
+      <button class="result-cta" id="result-cta">${cfg.cta}</button>
+      <button class="result-cta secondary" id="restart-btn">Start over</button>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const fill = document.getElementById('score-fill');
+    if (fill) fill.style.width = pct + '%';
+  }, 100);
+
+  document.getElementById('result-cta').addEventListener('click', cfg.ctaAction);
+  document.getElementById('restart-btn').addEventListener('click', () => {
+    current = 0;
+    answers = {};
+    scores = [];
+    render();
+  });
+}
+
+render();
+</script>
